@@ -1,0 +1,26 @@
+apiVersion: agent.severalnines.com/v1alpha1
+kind: AppBundle
+metadata:
+  labels:
+    severalnines.com/feature: sops
+  name: sops
+  namespace: severalnines-system
+spec:
+  manageLifecycle: true
+  provider: argo
+  source:
+    helm:
+      chart: sops-secrets-operator
+      repoURL: https://isindir.github.io/sops-secrets-operator
+      values: |
+        secretsAsFiles:
+          - name: sops-age-key
+            mountPath: /home/nonroot/.config/sops/age
+            secretName: sops-age-key
+      version: 0.16.0
+    kind: helm
+  sync:
+    createNamespace: true
+    prunePropagationPolicy: foreground
+    serverSideApply: true
+  targetNamespace: sops-secrets
