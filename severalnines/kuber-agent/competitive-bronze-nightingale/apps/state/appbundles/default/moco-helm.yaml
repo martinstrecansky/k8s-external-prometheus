@@ -1,0 +1,49 @@
+apiVersion: agent.severalnines.com/v1alpha1
+kind: AppBundle
+metadata:
+  name: moco-helm
+  namespace: default
+spec:
+  dependsOn:
+  - name: cert-manager
+    namespace: cert-manager
+    resolver:
+      checks:
+      - apiGroup: cert-manager.io
+      - crd: certificates.cert-manager.io
+      - resource:
+          apiVersion: apps/v1
+          kind: Deployment
+          name: cert-manager-webhook
+          namespace: cert-manager
+      mode: all
+    shared: true
+    source:
+      helm:
+        chart: cert-manager
+        repoURL: https://charts.jetstack.io
+        values:
+          crds:
+            enabled: true
+        version: '>=1.15.0 <2.0.0'
+      kind: helm
+  driftDetection: enabled
+  interval: 1m
+  manageLifecycle: true
+  provider: argo
+  prune: true
+  source:
+    helm:
+      chart: moco
+      repoURL: https://cybozu-go.github.io/moco/
+      values:
+        monitoring:
+          enabled: true
+          podMonitors:
+            enabled: true
+      version: 0.26.0
+    kind: helm
+  sync:
+    createNamespace: true
+    skipDryRunOnMissingResource: true
+  targetNamespace: default
