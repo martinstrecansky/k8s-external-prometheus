@@ -1,0 +1,3147 @@
+apiVersion: v1
+data:
+  clustercontrol-controllers.json: |
+    {
+      "uid": "kuber-cc-clustercontrol-controllers",
+      "title": "ClusterControl Controllers",
+      "description": "ClusterControl controller and importer health: resource reconcile outcomes, AppBundle status, and import sweep coverage.",
+      "tags": [
+        "clustercontrol",
+        "kuber-cc"
+      ],
+      "schemaVersion": 39,
+      "editable": true,
+      "graphTooltip": 1,
+      "refresh": "30s",
+      "time": {
+        "from": "now-6h",
+        "to": "now"
+      },
+      "timezone": "browser",
+      "templating": {
+        "list": [
+          {
+            "name": "datasource",
+            "type": "datasource",
+            "label": "Data source",
+            "query": "prometheus",
+            "current": {},
+            "hide": 0,
+            "refresh": 1
+          },
+          {
+            "name": "kubernetes_cluster",
+            "type": "query",
+            "label": "Kubernetes cluster",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "${datasource}"
+            },
+            "query": {
+              "qryType": 1,
+              "query": "label_values(kubernetes_cluster)",
+              "refId": "PrometheusVariableQuery"
+            },
+            "refresh": 2,
+            "includeAll": true,
+            "allValue": ".*",
+            "multi": true,
+            "current": {
+              "selected": true,
+              "text": [
+                "All"
+              ],
+              "value": [
+                "$__all"
+              ]
+            },
+            "sort": 1
+          }
+        ]
+      },
+      "annotations": {
+        "list": []
+      },
+      "links": [
+        {
+          "type": "dashboards",
+          "title": "ClusterControl dashboards",
+          "tags": [
+            "clustercontrol"
+          ],
+          "asDropdown": true,
+          "includeVars": true,
+          "keepTime": true,
+          "icon": "external link",
+          "targetBlank": false,
+          "url": ""
+        }
+      ],
+      "panels": [
+        {
+          "id": 1,
+          "type": "timeseries",
+          "title": "DatabaseOperator status (active = 1)",
+          "description": "Status of the installed database operator stack.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 0
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "custom": {
+                "fillOpacity": 8,
+                "showPoints": "never"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "kuber_dboperators_status{kubernetes_cluster=~\"$kubernetes_cluster\"}",
+              "legendFormat": "{{status}}",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "type": "timeseries",
+          "title": "AppBundle conditions (status = True)",
+          "description": "Which AppBundle condition types currently hold True.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 0
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "custom": {
+                "fillOpacity": 8,
+                "showPoints": "never"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "kuber_appbundles_condition_status{status=\"True\",kubernetes_cluster=~\"$kubernetes_cluster\"}",
+              "legendFormat": "{{condition_type}}",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            }
+          ]
+        },
+        {
+          "id": 3,
+          "type": "timeseries",
+          "title": "Reconcile rate by resource",
+          "description": "",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ops",
+              "custom": {
+                "fillOpacity": 8,
+                "showPoints": "never"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "sum(rate(kuber_dbclusters_reconcile_total{kubernetes_cluster=~\"$kubernetes_cluster\"}[5m]))",
+              "legendFormat": "DatabaseCluster",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            },
+            {
+              "refId": "B",
+              "expr": "sum(rate(kuber_dbbackups_reconcile_total{kubernetes_cluster=~\"$kubernetes_cluster\"}[5m]))",
+              "legendFormat": "DatabaseBackup",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            },
+            {
+              "refId": "C",
+              "expr": "sum(rate(kuber_dbbackupschedules_reconcile_total{kubernetes_cluster=~\"$kubernetes_cluster\"}[5m]))",
+              "legendFormat": "DatabaseBackupSchedule",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            },
+            {
+              "refId": "D",
+              "expr": "sum(rate(kuber_dboperators_reconcile_total{kubernetes_cluster=~\"$kubernetes_cluster\"}[5m]))",
+              "legendFormat": "DatabaseOperator",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            },
+            {
+              "refId": "E",
+              "expr": "sum(rate(kuber_appbundles_reconcile_total{kubernetes_cluster=~\"$kubernetes_cluster\"}[5m]))",
+              "legendFormat": "AppBundle",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            },
+            {
+              "refId": "F",
+              "expr": "sum(rate(kuber_clusterchangerequests_reconcile_total{kubernetes_cluster=~\"$kubernetes_cluster\"}[5m]))",
+              "legendFormat": "ClusterChangeRequest",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            }
+          ]
+        },
+        {
+          "id": 4,
+          "type": "timeseries",
+          "title": "Reconcile errors by resource",
+          "description": "",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ops",
+              "custom": {
+                "fillOpacity": 8,
+                "showPoints": "never"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "sum(rate(kuber_dbclusters_reconcile_total{result=\"error\",kubernetes_cluster=~\"$kubernetes_cluster\"}[5m]))",
+              "legendFormat": "DatabaseCluster",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            },
+            {
+              "refId": "B",
+              "expr": "sum(rate(kuber_dbbackups_reconcile_total{result=\"error\",kubernetes_cluster=~\"$kubernetes_cluster\"}[5m]))",
+              "legendFormat": "DatabaseBackup",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            },
+            {
+              "refId": "C",
+              "expr": "sum(rate(kuber_dbbackupschedules_reconcile_total{result=\"error\",kubernetes_cluster=~\"$kubernetes_cluster\"}[5m]))",
+              "legendFormat": "DatabaseBackupSchedule",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            },
+            {
+              "refId": "D",
+              "expr": "sum(rate(kuber_dboperators_reconcile_total{result=\"error\",kubernetes_cluster=~\"$kubernetes_cluster\"}[5m]))",
+              "legendFormat": "DatabaseOperator",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            },
+            {
+              "refId": "E",
+              "expr": "sum(rate(kuber_appbundles_reconcile_total{result=\"error\",kubernetes_cluster=~\"$kubernetes_cluster\"}[5m]))",
+              "legendFormat": "AppBundle",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            },
+            {
+              "refId": "F",
+              "expr": "sum(rate(kuber_clusterchangerequests_reconcile_total{result=\"error\",kubernetes_cluster=~\"$kubernetes_cluster\"}[5m]))",
+              "legendFormat": "ClusterChangeRequest",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            }
+          ]
+        },
+        {
+          "id": 5,
+          "type": "timeseries",
+          "title": "Reconcile duration p95 by resource",
+          "description": "",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 16
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s",
+              "custom": {
+                "fillOpacity": 8,
+                "showPoints": "never"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "histogram_quantile(0.95, sum by (le) (rate(kuber_dbclusters_reconcile_duration_seconds_bucket{kubernetes_cluster=~\"$kubernetes_cluster\"}[5m])))",
+              "legendFormat": "DatabaseCluster",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            },
+            {
+              "refId": "B",
+              "expr": "histogram_quantile(0.95, sum by (le) (rate(kuber_dbbackups_reconcile_duration_seconds_bucket{kubernetes_cluster=~\"$kubernetes_cluster\"}[5m])))",
+              "legendFormat": "DatabaseBackup",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            },
+            {
+              "refId": "C",
+              "expr": "histogram_quantile(0.95, sum by (le) (rate(kuber_dbbackupschedules_reconcile_duration_seconds_bucket{kubernetes_cluster=~\"$kubernetes_cluster\"}[5m])))",
+              "legendFormat": "DatabaseBackupSchedule",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            },
+            {
+              "refId": "D",
+              "expr": "histogram_quantile(0.95, sum by (le) (rate(kuber_dboperators_reconcile_duration_seconds_bucket{kubernetes_cluster=~\"$kubernetes_cluster\"}[5m])))",
+              "legendFormat": "DatabaseOperator",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            },
+            {
+              "refId": "E",
+              "expr": "histogram_quantile(0.95, sum by (le) (rate(kuber_appbundles_reconcile_duration_seconds_bucket{kubernetes_cluster=~\"$kubernetes_cluster\"}[5m])))",
+              "legendFormat": "AppBundle",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            },
+            {
+              "refId": "F",
+              "expr": "histogram_quantile(0.95, sum by (le) (rate(kuber_clusterchangerequests_reconcile_duration_seconds_bucket{kubernetes_cluster=~\"$kubernetes_cluster\"}[5m])))",
+              "legendFormat": "ClusterChangeRequest",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            }
+          ]
+        },
+        {
+          "id": 6,
+          "type": "timeseries",
+          "title": "Requeues / not-found by resource",
+          "description": "",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 16
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ops",
+              "custom": {
+                "fillOpacity": 8,
+                "showPoints": "never"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "sum by (result) (rate(kuber_dbclusters_reconcile_total{result=~\"requeue|not_found\",kubernetes_cluster=~\"$kubernetes_cluster\"}[5m]))",
+              "legendFormat": "DatabaseCluster {{result}}",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            },
+            {
+              "refId": "B",
+              "expr": "sum by (result) (rate(kuber_dbbackups_reconcile_total{result=~\"requeue|not_found\",kubernetes_cluster=~\"$kubernetes_cluster\"}[5m]))",
+              "legendFormat": "DatabaseBackup {{result}}",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            },
+            {
+              "refId": "C",
+              "expr": "sum by (result) (rate(kuber_dbbackupschedules_reconcile_total{result=~\"requeue|not_found\",kubernetes_cluster=~\"$kubernetes_cluster\"}[5m]))",
+              "legendFormat": "DatabaseBackupSchedule {{result}}",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            },
+            {
+              "refId": "D",
+              "expr": "sum by (result) (rate(kuber_dboperators_reconcile_total{result=~\"requeue|not_found\",kubernetes_cluster=~\"$kubernetes_cluster\"}[5m]))",
+              "legendFormat": "DatabaseOperator {{result}}",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            },
+            {
+              "refId": "E",
+              "expr": "sum by (result) (rate(kuber_appbundles_reconcile_total{result=~\"requeue|not_found\",kubernetes_cluster=~\"$kubernetes_cluster\"}[5m]))",
+              "legendFormat": "AppBundle {{result}}",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            },
+            {
+              "refId": "F",
+              "expr": "sum by (result) (rate(kuber_clusterchangerequests_reconcile_total{result=~\"requeue|not_found\",kubernetes_cluster=~\"$kubernetes_cluster\"}[5m]))",
+              "legendFormat": "ClusterChangeRequest {{result}}",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            }
+          ]
+        },
+        {
+          "id": 7,
+          "type": "timeseries",
+          "title": "AppBundle import sweeps",
+          "description": "",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 24
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ops",
+              "custom": {
+                "fillOpacity": 8,
+                "showPoints": "never"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "sum by (result) (rate(kuber_appbundleimports_runs_total{kubernetes_cluster=~\"$kubernetes_cluster\"}[15m]))",
+              "legendFormat": "{{result}}",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            }
+          ]
+        },
+        {
+          "id": 8,
+          "type": "timeseries",
+          "title": "Resources discovered per sweep (p95)",
+          "description": "",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 24
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "custom": {
+                "fillOpacity": 8,
+                "showPoints": "never"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "histogram_quantile(0.95, sum by (le) (rate(kuber_appbundleimports_discovered_bucket{kubernetes_cluster=~\"$kubernetes_cluster\"}[1h])))",
+              "legendFormat": "p95",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            }
+          ]
+        }
+      ]
+    }
+kind: ConfigMap
+metadata:
+  annotations:
+    gitops.severalnines.com/cleanup-with-parent: AppBundle/severalnines-system/prometheus-stack
+    gitops.severalnines.com/parent: AppBundle/severalnines-system/prometheus-stack
+    grafana_folder: ClusterControl
+  labels:
+    grafana_dashboard: "1"
+    observability.kuber-cc/audience: customer
+    observability.kuber-cc/feature: dashboards
+  name: kuber-dashboard-clustercontrol-controllers
+  namespace: observability
+---
+apiVersion: v1
+data:
+  database-clusters.json: |
+    {
+      "uid": "kuber-cc-database-clusters",
+      "title": "DatabaseClusters",
+      "description": "DatabaseCluster lifecycle: phase, time to Ready, reconcile outcomes and latency.",
+      "tags": [
+        "clustercontrol",
+        "kuber-cc"
+      ],
+      "schemaVersion": 39,
+      "editable": true,
+      "graphTooltip": 1,
+      "refresh": "30s",
+      "time": {
+        "from": "now-6h",
+        "to": "now"
+      },
+      "timezone": "browser",
+      "templating": {
+        "list": [
+          {
+            "name": "datasource",
+            "type": "datasource",
+            "label": "Data source",
+            "query": "prometheus",
+            "current": {},
+            "hide": 0,
+            "refresh": 1
+          },
+          {
+            "name": "kubernetes_cluster",
+            "type": "query",
+            "label": "Kubernetes cluster",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "${datasource}"
+            },
+            "query": {
+              "qryType": 1,
+              "query": "label_values(kubernetes_cluster)",
+              "refId": "PrometheusVariableQuery"
+            },
+            "refresh": 2,
+            "includeAll": true,
+            "allValue": ".*",
+            "multi": true,
+            "current": {
+              "selected": true,
+              "text": [
+                "All"
+              ],
+              "value": [
+                "$__all"
+              ]
+            },
+            "sort": 1
+          }
+        ]
+      },
+      "annotations": {
+        "list": []
+      },
+      "links": [
+        {
+          "type": "dashboards",
+          "title": "ClusterControl dashboards",
+          "tags": [
+            "clustercontrol"
+          ],
+          "asDropdown": true,
+          "includeVars": true,
+          "keepTime": true,
+          "icon": "external link",
+          "targetBlank": false,
+          "url": ""
+        }
+      ],
+      "panels": [
+        {
+          "id": 1,
+          "type": "timeseries",
+          "title": "Phase (active = 1)",
+          "description": "Phase of the most recently reconciled DatabaseCluster. 1 marks the active phase.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 0
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "custom": {
+                "fillOpacity": 8,
+                "showPoints": "never"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "kuber_dbclusters_phase{kubernetes_cluster=~\"$kubernetes_cluster\"}",
+              "legendFormat": "{{phase}}",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "type": "timeseries",
+          "title": "Time to Ready (p50 / p95 over 1h)",
+          "description": "",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 0
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s",
+              "custom": {
+                "fillOpacity": 8,
+                "showPoints": "never"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "histogram_quantile(0.5, sum by (le) (rate(kuber_dbclusters_time_to_ready_seconds_bucket{kubernetes_cluster=~\"$kubernetes_cluster\"}[1h])))",
+              "legendFormat": "p50",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            },
+            {
+              "refId": "B",
+              "expr": "histogram_quantile(0.95, sum by (le) (rate(kuber_dbclusters_time_to_ready_seconds_bucket{kubernetes_cluster=~\"$kubernetes_cluster\"}[1h])))",
+              "legendFormat": "p95",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            }
+          ]
+        },
+        {
+          "id": 3,
+          "type": "timeseries",
+          "title": "Reconcile results",
+          "description": "",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ops",
+              "custom": {
+                "fillOpacity": 8,
+                "showPoints": "never"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "sum by (result) (rate(kuber_dbclusters_reconcile_total{kubernetes_cluster=~\"$kubernetes_cluster\"}[5m]))",
+              "legendFormat": "{{result}}",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            }
+          ]
+        },
+        {
+          "id": 4,
+          "type": "timeseries",
+          "title": "Reconcile errors by type",
+          "description": "",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ops",
+              "custom": {
+                "fillOpacity": 8,
+                "showPoints": "never"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "sum by (error_type) (rate(kuber_dbclusters_reconcile_total{result=\"error\",kubernetes_cluster=~\"$kubernetes_cluster\"}[5m]))",
+              "legendFormat": "{{error_type}}",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            }
+          ]
+        },
+        {
+          "id": 5,
+          "type": "timeseries",
+          "title": "Reconcile duration (p50 / p95)",
+          "description": "",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 16
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s",
+              "custom": {
+                "fillOpacity": 8,
+                "showPoints": "never"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "histogram_quantile(0.5, sum by (le) (rate(kuber_dbclusters_reconcile_duration_seconds_bucket{kubernetes_cluster=~\"$kubernetes_cluster\"}[5m])))",
+              "legendFormat": "p50",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            },
+            {
+              "refId": "B",
+              "expr": "histogram_quantile(0.95, sum by (le) (rate(kuber_dbclusters_reconcile_duration_seconds_bucket{kubernetes_cluster=~\"$kubernetes_cluster\"}[5m])))",
+              "legendFormat": "p95",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            }
+          ]
+        },
+        {
+          "id": 6,
+          "type": "timeseries",
+          "title": "DatabaseOperator status (active = 1)",
+          "description": "Status of the installed database operator stack.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 16
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "custom": {
+                "fillOpacity": 8,
+                "showPoints": "never"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "kuber_dboperators_status{kubernetes_cluster=~\"$kubernetes_cluster\"}",
+              "legendFormat": "{{status}}",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            }
+          ]
+        },
+        {
+          "id": 100,
+          "type": "row",
+          "title": "Logs & Traces (requires Loki/Tempo)",
+          "collapsed": true,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 24
+          },
+          "panels": []
+        }
+      ]
+    }
+kind: ConfigMap
+metadata:
+  annotations:
+    gitops.severalnines.com/cleanup-with-parent: AppBundle/severalnines-system/prometheus-stack
+    gitops.severalnines.com/parent: AppBundle/severalnines-system/prometheus-stack
+    grafana_folder: ClusterControl
+  labels:
+    grafana_dashboard: "1"
+    observability.kuber-cc/audience: customer
+    observability.kuber-cc/feature: dashboards
+  name: kuber-dashboard-database-clusters
+  namespace: observability
+---
+apiVersion: v1
+data:
+  gitops-pr-health.json: |
+    {
+      "uid": "kuber-cc-gitops-pr-health",
+      "title": "GitOps PR Health",
+      "description": "GitOps PR/change flow: ClusterChangeRequest phase and reconcile health, plus Git provider API budget and call rate.",
+      "tags": [
+        "clustercontrol",
+        "kuber-cc"
+      ],
+      "schemaVersion": 39,
+      "editable": true,
+      "graphTooltip": 1,
+      "refresh": "30s",
+      "time": {
+        "from": "now-6h",
+        "to": "now"
+      },
+      "timezone": "browser",
+      "templating": {
+        "list": [
+          {
+            "name": "datasource",
+            "type": "datasource",
+            "label": "Data source",
+            "query": "prometheus",
+            "current": {},
+            "hide": 0,
+            "refresh": 1
+          },
+          {
+            "name": "kubernetes_cluster",
+            "type": "query",
+            "label": "Kubernetes cluster",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "${datasource}"
+            },
+            "query": {
+              "qryType": 1,
+              "query": "label_values(kubernetes_cluster)",
+              "refId": "PrometheusVariableQuery"
+            },
+            "refresh": 2,
+            "includeAll": true,
+            "allValue": ".*",
+            "multi": true,
+            "current": {
+              "selected": true,
+              "text": [
+                "All"
+              ],
+              "value": [
+                "$__all"
+              ]
+            },
+            "sort": 1
+          }
+        ]
+      },
+      "annotations": {
+        "list": []
+      },
+      "links": [
+        {
+          "type": "dashboards",
+          "title": "ClusterControl dashboards",
+          "tags": [
+            "clustercontrol"
+          ],
+          "asDropdown": true,
+          "includeVars": true,
+          "keepTime": true,
+          "icon": "external link",
+          "targetBlank": false,
+          "url": ""
+        }
+      ],
+      "panels": [
+        {
+          "id": 1,
+          "type": "timeseries",
+          "title": "ClusterChangeRequest phase (active = 1)",
+          "description": "Phase of the most recently reconciled ClusterChangeRequest. 1 marks the active phase.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 0
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "custom": {
+                "fillOpacity": 8,
+                "showPoints": "never"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "kuber_clusterchangerequests_phase{kubernetes_cluster=~\"$kubernetes_cluster\"}",
+              "legendFormat": "{{phase}}",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "type": "timeseries",
+          "title": "ClusterChangeRequest reconcile results",
+          "description": "",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 0
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ops",
+              "custom": {
+                "fillOpacity": 8,
+                "showPoints": "never"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "sum by (result) (rate(kuber_clusterchangerequests_reconcile_total{kubernetes_cluster=~\"$kubernetes_cluster\"}[5m]))",
+              "legendFormat": "{{result}}",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            }
+          ]
+        },
+        {
+          "id": 3,
+          "type": "timeseries",
+          "title": "Git provider API budget remaining",
+          "description": "",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "custom": {
+                "fillOpacity": 8,
+                "showPoints": "never"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "kuber_github_api_remaining{kubernetes_cluster=~\"$kubernetes_cluster\"}",
+              "legendFormat": "{{provider}}",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            }
+          ]
+        },
+        {
+          "id": 4,
+          "type": "timeseries",
+          "title": "Git provider API calls by operation",
+          "description": "",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ops",
+              "custom": {
+                "fillOpacity": 8,
+                "showPoints": "never"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "sum by (operation) (rate(kuber_github_api_calls_total{kubernetes_cluster=~\"$kubernetes_cluster\"}[5m]))",
+              "legendFormat": "{{operation}}",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            }
+          ]
+        }
+      ]
+    }
+kind: ConfigMap
+metadata:
+  annotations:
+    gitops.severalnines.com/cleanup-with-parent: AppBundle/severalnines-system/prometheus-stack
+    gitops.severalnines.com/parent: AppBundle/severalnines-system/prometheus-stack
+    grafana_folder: ClusterControl
+  labels:
+    grafana_dashboard: "1"
+    observability.kuber-cc/audience: customer
+    observability.kuber-cc/feature: dashboards
+  name: kuber-dashboard-gitops-pr-health
+  namespace: observability
+---
+apiVersion: v1
+data:
+  kuber-cc-overview.json: |
+    {
+      "uid": "kuber-cc-overview",
+      "title": "Kuber CC Overview",
+      "description": "ClusterControl on Kubernetes \u2014 platform health at a glance: database cluster state, reconcile health, GitOps and secrets activity.",
+      "tags": [
+        "clustercontrol",
+        "kuber-cc"
+      ],
+      "schemaVersion": 39,
+      "editable": true,
+      "graphTooltip": 1,
+      "refresh": "30s",
+      "time": {
+        "from": "now-6h",
+        "to": "now"
+      },
+      "timezone": "browser",
+      "templating": {
+        "list": [
+          {
+            "name": "datasource",
+            "type": "datasource",
+            "label": "Data source",
+            "query": "prometheus",
+            "current": {},
+            "hide": 0,
+            "refresh": 1
+          },
+          {
+            "name": "kubernetes_cluster",
+            "type": "query",
+            "label": "Kubernetes cluster",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "${datasource}"
+            },
+            "query": {
+              "qryType": 1,
+              "query": "label_values(kubernetes_cluster)",
+              "refId": "PrometheusVariableQuery"
+            },
+            "refresh": 2,
+            "includeAll": true,
+            "allValue": ".*",
+            "multi": true,
+            "current": {
+              "selected": true,
+              "text": [
+                "All"
+              ],
+              "value": [
+                "$__all"
+              ]
+            },
+            "sort": 1
+          }
+        ]
+      },
+      "annotations": {
+        "list": []
+      },
+      "links": [
+        {
+          "type": "dashboards",
+          "title": "ClusterControl dashboards",
+          "tags": [
+            "clustercontrol"
+          ],
+          "asDropdown": true,
+          "includeVars": true,
+          "keepTime": true,
+          "icon": "external link",
+          "targetBlank": false,
+          "url": ""
+        }
+      ],
+      "panels": [
+        {
+          "id": 100,
+          "type": "row",
+          "title": "Database Clusters",
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 0
+          },
+          "panels": []
+        },
+        {
+          "id": 1,
+          "type": "timeseries",
+          "title": "DatabaseCluster phase (active = 1)",
+          "description": "Phase of the most recently reconciled DatabaseCluster. 1 marks the active phase.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 1
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "custom": {
+                "fillOpacity": 8,
+                "showPoints": "never"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "kuber_dbclusters_phase{kubernetes_cluster=~\"$kubernetes_cluster\"}",
+              "legendFormat": "{{phase}}",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "type": "timeseries",
+          "title": "Time to Ready (p95 over 1h)",
+          "description": "Time from DatabaseCluster creation to first Ready condition.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 1
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s",
+              "custom": {
+                "fillOpacity": 8,
+                "showPoints": "never"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "histogram_quantile(0.95, sum by (le) (rate(kuber_dbclusters_time_to_ready_seconds_bucket{kubernetes_cluster=~\"$kubernetes_cluster\"}[1h])))",
+              "legendFormat": "p95",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            }
+          ]
+        },
+        {
+          "id": 101,
+          "type": "row",
+          "title": "Reconcile Health",
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 9
+          },
+          "panels": []
+        },
+        {
+          "id": 3,
+          "type": "timeseries",
+          "title": "Reconcile rate by resource",
+          "description": "",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 10
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ops",
+              "custom": {
+                "fillOpacity": 8,
+                "showPoints": "never"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "sum(rate(kuber_dbclusters_reconcile_total{kubernetes_cluster=~\"$kubernetes_cluster\"}[5m]))",
+              "legendFormat": "DatabaseCluster",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            },
+            {
+              "refId": "B",
+              "expr": "sum(rate(kuber_dbbackups_reconcile_total{kubernetes_cluster=~\"$kubernetes_cluster\"}[5m]))",
+              "legendFormat": "DatabaseBackup",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            },
+            {
+              "refId": "C",
+              "expr": "sum(rate(kuber_dbbackupschedules_reconcile_total{kubernetes_cluster=~\"$kubernetes_cluster\"}[5m]))",
+              "legendFormat": "DatabaseBackupSchedule",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            },
+            {
+              "refId": "D",
+              "expr": "sum(rate(kuber_dboperators_reconcile_total{kubernetes_cluster=~\"$kubernetes_cluster\"}[5m]))",
+              "legendFormat": "DatabaseOperator",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            },
+            {
+              "refId": "E",
+              "expr": "sum(rate(kuber_appbundles_reconcile_total{kubernetes_cluster=~\"$kubernetes_cluster\"}[5m]))",
+              "legendFormat": "AppBundle",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            },
+            {
+              "refId": "F",
+              "expr": "sum(rate(kuber_clusterchangerequests_reconcile_total{kubernetes_cluster=~\"$kubernetes_cluster\"}[5m]))",
+              "legendFormat": "ClusterChangeRequest",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            }
+          ]
+        },
+        {
+          "id": 4,
+          "type": "timeseries",
+          "title": "Reconcile errors by resource",
+          "description": "",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 10
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ops",
+              "custom": {
+                "fillOpacity": 8,
+                "showPoints": "never"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "sum(rate(kuber_dbclusters_reconcile_total{result=\"error\",kubernetes_cluster=~\"$kubernetes_cluster\"}[5m]))",
+              "legendFormat": "DatabaseCluster",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            },
+            {
+              "refId": "B",
+              "expr": "sum(rate(kuber_dbbackups_reconcile_total{result=\"error\",kubernetes_cluster=~\"$kubernetes_cluster\"}[5m]))",
+              "legendFormat": "DatabaseBackup",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            },
+            {
+              "refId": "C",
+              "expr": "sum(rate(kuber_dbbackupschedules_reconcile_total{result=\"error\",kubernetes_cluster=~\"$kubernetes_cluster\"}[5m]))",
+              "legendFormat": "DatabaseBackupSchedule",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            },
+            {
+              "refId": "D",
+              "expr": "sum(rate(kuber_dboperators_reconcile_total{result=\"error\",kubernetes_cluster=~\"$kubernetes_cluster\"}[5m]))",
+              "legendFormat": "DatabaseOperator",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            },
+            {
+              "refId": "E",
+              "expr": "sum(rate(kuber_appbundles_reconcile_total{result=\"error\",kubernetes_cluster=~\"$kubernetes_cluster\"}[5m]))",
+              "legendFormat": "AppBundle",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            },
+            {
+              "refId": "F",
+              "expr": "sum(rate(kuber_clusterchangerequests_reconcile_total{result=\"error\",kubernetes_cluster=~\"$kubernetes_cluster\"}[5m]))",
+              "legendFormat": "ClusterChangeRequest",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            }
+          ]
+        },
+        {
+          "id": 102,
+          "type": "row",
+          "title": "GitOps",
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 18
+          },
+          "panels": []
+        },
+        {
+          "id": 5,
+          "type": "timeseries",
+          "title": "Git provider API budget remaining",
+          "description": "Most recently observed remaining-request count. Falling fast = something is chatty.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 19
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "custom": {
+                "fillOpacity": 8,
+                "showPoints": "never"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "kuber_github_api_remaining{kubernetes_cluster=~\"$kubernetes_cluster\"}",
+              "legendFormat": "{{provider}}",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            }
+          ]
+        },
+        {
+          "id": 6,
+          "type": "timeseries",
+          "title": "Git provider API calls by status",
+          "description": "",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 19
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ops",
+              "custom": {
+                "fillOpacity": 8,
+                "showPoints": "never"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "sum by (status_code) (rate(kuber_github_api_calls_total{kubernetes_cluster=~\"$kubernetes_cluster\"}[5m]))",
+              "legendFormat": "HTTP {{status_code}}",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            }
+          ]
+        },
+        {
+          "id": 103,
+          "type": "row",
+          "title": "Secret Operations (SOPS)",
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 27
+          },
+          "panels": []
+        },
+        {
+          "id": 7,
+          "type": "timeseries",
+          "title": "SOPS operations",
+          "description": "",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 28
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ops",
+              "custom": {
+                "fillOpacity": 8,
+                "showPoints": "never"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "sum by (operation, result) (rate(kuber_sops_operations_total{kubernetes_cluster=~\"$kubernetes_cluster\"}[5m]))",
+              "legendFormat": "{{operation}} / {{result}}",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            }
+          ]
+        }
+      ]
+    }
+kind: ConfigMap
+metadata:
+  annotations:
+    gitops.severalnines.com/cleanup-with-parent: AppBundle/severalnines-system/prometheus-stack
+    gitops.severalnines.com/parent: AppBundle/severalnines-system/prometheus-stack
+    grafana_folder: ClusterControl
+  labels:
+    grafana_dashboard: "1"
+    observability.kuber-cc/audience: customer
+    observability.kuber-cc/feature: dashboards
+  name: kuber-dashboard-kuber-cc-overview
+  namespace: observability
+---
+apiVersion: v1
+data:
+  controller-debug.json: |
+    {
+      "uid": "kuber-cc-controller-debug",
+      "title": "Kuber CC Controller Debug",
+      "description": "Internal: per-reconciler health of the agent-operator \u2014 kuber-cc reconcile metrics plus controller-runtime internals.",
+      "tags": [
+        "clustercontrol",
+        "kuber-cc"
+      ],
+      "schemaVersion": 39,
+      "editable": true,
+      "graphTooltip": 1,
+      "refresh": "30s",
+      "time": {
+        "from": "now-6h",
+        "to": "now"
+      },
+      "timezone": "browser",
+      "templating": {
+        "list": [
+          {
+            "name": "datasource",
+            "type": "datasource",
+            "label": "Data source",
+            "query": "prometheus",
+            "current": {},
+            "hide": 0,
+            "refresh": 1
+          },
+          {
+            "name": "kubernetes_cluster",
+            "type": "query",
+            "label": "Kubernetes cluster",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "${datasource}"
+            },
+            "query": {
+              "qryType": 1,
+              "query": "label_values(kubernetes_cluster)",
+              "refId": "PrometheusVariableQuery"
+            },
+            "refresh": 2,
+            "includeAll": true,
+            "allValue": ".*",
+            "multi": true,
+            "current": {
+              "selected": true,
+              "text": [
+                "All"
+              ],
+              "value": [
+                "$__all"
+              ]
+            },
+            "sort": 1
+          }
+        ]
+      },
+      "annotations": {
+        "list": []
+      },
+      "links": [
+        {
+          "type": "dashboards",
+          "title": "ClusterControl dashboards",
+          "tags": [
+            "clustercontrol"
+          ],
+          "asDropdown": true,
+          "includeVars": true,
+          "keepTime": true,
+          "icon": "external link",
+          "targetBlank": false,
+          "url": ""
+        }
+      ],
+      "panels": [
+        {
+          "id": 100,
+          "type": "row",
+          "title": "Kuber CC Reconcilers",
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 0
+          },
+          "panels": []
+        },
+        {
+          "id": 1,
+          "type": "timeseries",
+          "title": "Reconcile rate by resource",
+          "description": "",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 1
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ops",
+              "custom": {
+                "fillOpacity": 8,
+                "showPoints": "never"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "sum(rate(kuber_dbclusters_reconcile_total{kubernetes_cluster=~\"$kubernetes_cluster\"}[5m]))",
+              "legendFormat": "DatabaseCluster",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            },
+            {
+              "refId": "B",
+              "expr": "sum(rate(kuber_dbbackups_reconcile_total{kubernetes_cluster=~\"$kubernetes_cluster\"}[5m]))",
+              "legendFormat": "DatabaseBackup",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            },
+            {
+              "refId": "C",
+              "expr": "sum(rate(kuber_dbbackupschedules_reconcile_total{kubernetes_cluster=~\"$kubernetes_cluster\"}[5m]))",
+              "legendFormat": "DatabaseBackupSchedule",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            },
+            {
+              "refId": "D",
+              "expr": "sum(rate(kuber_dboperators_reconcile_total{kubernetes_cluster=~\"$kubernetes_cluster\"}[5m]))",
+              "legendFormat": "DatabaseOperator",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            },
+            {
+              "refId": "E",
+              "expr": "sum(rate(kuber_appbundles_reconcile_total{kubernetes_cluster=~\"$kubernetes_cluster\"}[5m]))",
+              "legendFormat": "AppBundle",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            },
+            {
+              "refId": "F",
+              "expr": "sum(rate(kuber_clusterchangerequests_reconcile_total{kubernetes_cluster=~\"$kubernetes_cluster\"}[5m]))",
+              "legendFormat": "ClusterChangeRequest",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "type": "timeseries",
+          "title": "Reconcile errors by resource",
+          "description": "",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 1
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ops",
+              "custom": {
+                "fillOpacity": 8,
+                "showPoints": "never"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "sum(rate(kuber_dbclusters_reconcile_total{result=\"error\",kubernetes_cluster=~\"$kubernetes_cluster\"}[5m]))",
+              "legendFormat": "DatabaseCluster",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            },
+            {
+              "refId": "B",
+              "expr": "sum(rate(kuber_dbbackups_reconcile_total{result=\"error\",kubernetes_cluster=~\"$kubernetes_cluster\"}[5m]))",
+              "legendFormat": "DatabaseBackup",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            },
+            {
+              "refId": "C",
+              "expr": "sum(rate(kuber_dbbackupschedules_reconcile_total{result=\"error\",kubernetes_cluster=~\"$kubernetes_cluster\"}[5m]))",
+              "legendFormat": "DatabaseBackupSchedule",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            },
+            {
+              "refId": "D",
+              "expr": "sum(rate(kuber_dboperators_reconcile_total{result=\"error\",kubernetes_cluster=~\"$kubernetes_cluster\"}[5m]))",
+              "legendFormat": "DatabaseOperator",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            },
+            {
+              "refId": "E",
+              "expr": "sum(rate(kuber_appbundles_reconcile_total{result=\"error\",kubernetes_cluster=~\"$kubernetes_cluster\"}[5m]))",
+              "legendFormat": "AppBundle",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            },
+            {
+              "refId": "F",
+              "expr": "sum(rate(kuber_clusterchangerequests_reconcile_total{result=\"error\",kubernetes_cluster=~\"$kubernetes_cluster\"}[5m]))",
+              "legendFormat": "ClusterChangeRequest",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            }
+          ]
+        },
+        {
+          "id": 3,
+          "type": "timeseries",
+          "title": "Reconcile duration p95 by resource",
+          "description": "",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 9
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s",
+              "custom": {
+                "fillOpacity": 8,
+                "showPoints": "never"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "histogram_quantile(0.95, sum by (le) (rate(kuber_dbclusters_reconcile_duration_seconds_bucket{kubernetes_cluster=~\"$kubernetes_cluster\"}[5m])))",
+              "legendFormat": "DatabaseCluster",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            },
+            {
+              "refId": "B",
+              "expr": "histogram_quantile(0.95, sum by (le) (rate(kuber_dbbackups_reconcile_duration_seconds_bucket{kubernetes_cluster=~\"$kubernetes_cluster\"}[5m])))",
+              "legendFormat": "DatabaseBackup",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            },
+            {
+              "refId": "C",
+              "expr": "histogram_quantile(0.95, sum by (le) (rate(kuber_dbbackupschedules_reconcile_duration_seconds_bucket{kubernetes_cluster=~\"$kubernetes_cluster\"}[5m])))",
+              "legendFormat": "DatabaseBackupSchedule",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            },
+            {
+              "refId": "D",
+              "expr": "histogram_quantile(0.95, sum by (le) (rate(kuber_dboperators_reconcile_duration_seconds_bucket{kubernetes_cluster=~\"$kubernetes_cluster\"}[5m])))",
+              "legendFormat": "DatabaseOperator",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            },
+            {
+              "refId": "E",
+              "expr": "histogram_quantile(0.95, sum by (le) (rate(kuber_appbundles_reconcile_duration_seconds_bucket{kubernetes_cluster=~\"$kubernetes_cluster\"}[5m])))",
+              "legendFormat": "AppBundle",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            },
+            {
+              "refId": "F",
+              "expr": "histogram_quantile(0.95, sum by (le) (rate(kuber_clusterchangerequests_reconcile_duration_seconds_bucket{kubernetes_cluster=~\"$kubernetes_cluster\"}[5m])))",
+              "legendFormat": "ClusterChangeRequest",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            }
+          ]
+        },
+        {
+          "id": 4,
+          "type": "timeseries",
+          "title": "Requeues / not-found by resource",
+          "description": "",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 9
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ops",
+              "custom": {
+                "fillOpacity": 8,
+                "showPoints": "never"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "sum by (result) (rate(kuber_dbclusters_reconcile_total{result=~\"requeue|not_found\",kubernetes_cluster=~\"$kubernetes_cluster\"}[5m]))",
+              "legendFormat": "DatabaseCluster {{result}}",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            },
+            {
+              "refId": "B",
+              "expr": "sum by (result) (rate(kuber_dbbackups_reconcile_total{result=~\"requeue|not_found\",kubernetes_cluster=~\"$kubernetes_cluster\"}[5m]))",
+              "legendFormat": "DatabaseBackup {{result}}",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            },
+            {
+              "refId": "C",
+              "expr": "sum by (result) (rate(kuber_dbbackupschedules_reconcile_total{result=~\"requeue|not_found\",kubernetes_cluster=~\"$kubernetes_cluster\"}[5m]))",
+              "legendFormat": "DatabaseBackupSchedule {{result}}",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            },
+            {
+              "refId": "D",
+              "expr": "sum by (result) (rate(kuber_dboperators_reconcile_total{result=~\"requeue|not_found\",kubernetes_cluster=~\"$kubernetes_cluster\"}[5m]))",
+              "legendFormat": "DatabaseOperator {{result}}",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            },
+            {
+              "refId": "E",
+              "expr": "sum by (result) (rate(kuber_appbundles_reconcile_total{result=~\"requeue|not_found\",kubernetes_cluster=~\"$kubernetes_cluster\"}[5m]))",
+              "legendFormat": "AppBundle {{result}}",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            },
+            {
+              "refId": "F",
+              "expr": "sum by (result) (rate(kuber_clusterchangerequests_reconcile_total{result=~\"requeue|not_found\",kubernetes_cluster=~\"$kubernetes_cluster\"}[5m]))",
+              "legendFormat": "ClusterChangeRequest {{result}}",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            }
+          ]
+        },
+        {
+          "id": 101,
+          "type": "row",
+          "title": "controller-runtime",
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 17
+          },
+          "panels": []
+        },
+        {
+          "id": 5,
+          "type": "timeseries",
+          "title": "Reconcile rate by controller",
+          "description": "",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 18
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ops",
+              "custom": {
+                "fillOpacity": 8,
+                "showPoints": "never"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "sum by (controller) (rate(controller_runtime_reconcile_total{kubernetes_cluster=~\"$kubernetes_cluster\"}[5m]))",
+              "legendFormat": "{{controller}}",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            }
+          ]
+        },
+        {
+          "id": 6,
+          "type": "timeseries",
+          "title": "Reconcile errors by controller",
+          "description": "",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 18
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ops",
+              "custom": {
+                "fillOpacity": 8,
+                "showPoints": "never"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "sum by (controller) (rate(controller_runtime_reconcile_errors_total{kubernetes_cluster=~\"$kubernetes_cluster\"}[5m]))",
+              "legendFormat": "{{controller}}",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            }
+          ]
+        },
+        {
+          "id": 7,
+          "type": "timeseries",
+          "title": "Workqueue depth",
+          "description": "",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 26
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "custom": {
+                "fillOpacity": 8,
+                "showPoints": "never"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "workqueue_depth{kubernetes_cluster=~\"$kubernetes_cluster\"}",
+              "legendFormat": "{{name}}",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            }
+          ]
+        },
+        {
+          "id": 8,
+          "type": "timeseries",
+          "title": "Workqueue p95 time-in-queue",
+          "description": "",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 26
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s",
+              "custom": {
+                "fillOpacity": 8,
+                "showPoints": "never"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "histogram_quantile(0.95, sum by (le, name) (rate(workqueue_queue_duration_seconds_bucket{kubernetes_cluster=~\"$kubernetes_cluster\"}[5m])))",
+              "legendFormat": "{{name}}",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            }
+          ]
+        },
+        {
+          "id": 9,
+          "type": "timeseries",
+          "title": "Active workers",
+          "description": "",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 34
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "custom": {
+                "fillOpacity": 8,
+                "showPoints": "never"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "controller_runtime_active_workers{kubernetes_cluster=~\"$kubernetes_cluster\"}",
+              "legendFormat": "{{controller}}",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            }
+          ]
+        },
+        {
+          "id": 10,
+          "type": "timeseries",
+          "title": "Process memory / goroutines",
+          "description": "",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 34
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "custom": {
+                "fillOpacity": 8,
+                "showPoints": "never"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "process_resident_memory_bytes{kubernetes_cluster=~\"$kubernetes_cluster\"}",
+              "legendFormat": "RSS {{job}}",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            },
+            {
+              "refId": "B",
+              "expr": "go_goroutines{kubernetes_cluster=~\"$kubernetes_cluster\"}",
+              "legendFormat": "goroutines {{job}}",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            }
+          ]
+        }
+      ]
+    }
+kind: ConfigMap
+metadata:
+  annotations:
+    gitops.severalnines.com/cleanup-with-parent: AppBundle/severalnines-system/prometheus-stack
+    gitops.severalnines.com/parent: AppBundle/severalnines-system/prometheus-stack
+    grafana_folder: ClusterControl Internal
+  labels:
+    grafana_dashboard: "1"
+    observability.kuber-cc/audience: internal
+    observability.kuber-cc/feature: dashboards
+  name: kuber-dashboard-controller-debug
+  namespace: observability
+---
+apiVersion: v1
+data:
+  platform-scrape.json: |
+    {
+      "uid": "kuber-cc-platform-scrape",
+      "title": "Kuber CC Platform & Scrape",
+      "description": "Internal: what is being scraped and whether the kuber-cc components themselves are healthy.",
+      "tags": [
+        "clustercontrol",
+        "kuber-cc"
+      ],
+      "schemaVersion": 39,
+      "editable": true,
+      "graphTooltip": 1,
+      "refresh": "30s",
+      "time": {
+        "from": "now-6h",
+        "to": "now"
+      },
+      "timezone": "browser",
+      "templating": {
+        "list": [
+          {
+            "name": "datasource",
+            "type": "datasource",
+            "label": "Data source",
+            "query": "prometheus",
+            "current": {},
+            "hide": 0,
+            "refresh": 1
+          },
+          {
+            "name": "kubernetes_cluster",
+            "type": "query",
+            "label": "Kubernetes cluster",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "${datasource}"
+            },
+            "query": {
+              "qryType": 1,
+              "query": "label_values(kubernetes_cluster)",
+              "refId": "PrometheusVariableQuery"
+            },
+            "refresh": 2,
+            "includeAll": true,
+            "allValue": ".*",
+            "multi": true,
+            "current": {
+              "selected": true,
+              "text": [
+                "All"
+              ],
+              "value": [
+                "$__all"
+              ]
+            },
+            "sort": 1
+          }
+        ]
+      },
+      "annotations": {
+        "list": []
+      },
+      "links": [
+        {
+          "type": "dashboards",
+          "title": "ClusterControl dashboards",
+          "tags": [
+            "clustercontrol"
+          ],
+          "asDropdown": true,
+          "includeVars": true,
+          "keepTime": true,
+          "icon": "external link",
+          "targetBlank": false,
+          "url": ""
+        }
+      ],
+      "panels": [
+        {
+          "id": 100,
+          "type": "row",
+          "title": "Scrape Coverage",
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 0
+          },
+          "panels": []
+        },
+        {
+          "id": 1,
+          "type": "timeseries",
+          "title": "Targets up by job",
+          "description": "Count of healthy scrape targets per job.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 1
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "custom": {
+                "fillOpacity": 8,
+                "showPoints": "never"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "sum by (job) (up{kubernetes_cluster=~\"$kubernetes_cluster\"})",
+              "legendFormat": "{{job}}",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "type": "timeseries",
+          "title": "Targets down by job",
+          "description": "Anything non-zero here means a configured target is failing its scrape.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 1
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "custom": {
+                "fillOpacity": 8,
+                "showPoints": "never"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "count by (job) (up{kubernetes_cluster=~\"$kubernetes_cluster\"} == 0)",
+              "legendFormat": "{{job}}",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            }
+          ]
+        },
+        {
+          "id": 3,
+          "type": "timeseries",
+          "title": "Scrape duration by job (max)",
+          "description": "",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 9
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s",
+              "custom": {
+                "fillOpacity": 8,
+                "showPoints": "never"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "max by (job) (scrape_duration_seconds{kubernetes_cluster=~\"$kubernetes_cluster\"})",
+              "legendFormat": "{{job}}",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            }
+          ]
+        },
+        {
+          "id": 101,
+          "type": "row",
+          "title": "Kuber Proxy (server-side)",
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 17
+          },
+          "panels": []
+        },
+        {
+          "id": 4,
+          "type": "timeseries",
+          "title": "HTTP request rate by route",
+          "description": "kuber-proxy runs CC-side; series appear only where proxy metrics are scraped into this datasource.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 18
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ops",
+              "custom": {
+                "fillOpacity": 8,
+                "showPoints": "never"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "sum by (route) (rate(kuber_proxy_http_requests_total{kubernetes_cluster=~\"$kubernetes_cluster\"}[5m]))",
+              "legendFormat": "{{route}}",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            }
+          ]
+        },
+        {
+          "id": 5,
+          "type": "timeseries",
+          "title": "HTTP latency p95 by route",
+          "description": "",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 18
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s",
+              "custom": {
+                "fillOpacity": 8,
+                "showPoints": "never"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "histogram_quantile(0.95, sum by (le, route) (rate(kuber_proxy_http_request_duration_seconds_bucket{kubernetes_cluster=~\"$kubernetes_cluster\"}[5m])))",
+              "legendFormat": "{{route}}",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            }
+          ]
+        },
+        {
+          "id": 6,
+          "type": "timeseries",
+          "title": "HTTP responses by status",
+          "description": "",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 26
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ops",
+              "custom": {
+                "fillOpacity": 8,
+                "showPoints": "never"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "sum by (status_code) (rate(kuber_proxy_http_requests_total{kubernetes_cluster=~\"$kubernetes_cluster\"}[5m]))",
+              "legendFormat": "HTTP {{status_code}}",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              }
+            }
+          ]
+        }
+      ]
+    }
+kind: ConfigMap
+metadata:
+  annotations:
+    gitops.severalnines.com/cleanup-with-parent: AppBundle/severalnines-system/prometheus-stack
+    gitops.severalnines.com/parent: AppBundle/severalnines-system/prometheus-stack
+    grafana_folder: ClusterControl Internal
+  labels:
+    grafana_dashboard: "1"
+    observability.kuber-cc/audience: internal
+    observability.kuber-cc/feature: dashboards
+  name: kuber-dashboard-platform-scrape
+  namespace: observability
+---
+apiVersion: v1
+data:
+  keys: admin-user,admin-password
+  owner: prometheus-stack
+  secretName: prometheus-stack-grafana
+kind: ConfigMap
+metadata:
+  annotations:
+    gitops.severalnines.com/cleanup-with-parent: AppBundle/severalnines-system/prometheus-stack
+    gitops.severalnines.com/parent: AppBundle/severalnines-system/prometheus-stack
+  labels:
+    agent.severalnines.com/expose-registry: "true"
+  name: expose-prometheus-stack-grafana
+  namespace: observability
+
