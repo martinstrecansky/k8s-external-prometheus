@@ -1,0 +1,36 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  labels:
+    appbundle.severalnines.com/managed: "true"
+    appbundle.severalnines.com/owner-nn: severalnines-system.cert-manager
+  name: cert-manager
+  namespace: argocd
+spec:
+  destination:
+    name: ""
+    namespace: cert-manager
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    chart: cert-manager
+    helm:
+      values: |
+        crds:
+          enabled: true
+    repoURL: https://charts.jetstack.io
+    targetRevision: '>=1.15.0 <2.0.0'
+  syncPolicy:
+    automated:
+      allowEmpty: true
+      prune: true
+      selfHeal: false
+    syncOptions:
+    - CreateNamespace=true
+    - ServerSideApply=true
+    - PrunePropagationPolicy=foreground
+
