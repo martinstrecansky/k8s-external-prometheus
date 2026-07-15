@@ -1,0 +1,22 @@
+apiVersion: agent.severalnines.com/v1alpha1
+kind: AppBundle
+metadata:
+  labels:
+    severalnines.com/feature: prometheus-agent
+  name: prometheus-agent
+  namespace: severalnines-system
+spec:
+  manageLifecycle: true
+  provider: argo
+  renderer: raw
+  source:
+    git:
+      path: severalnines/kuber-agent/competitive-bronze-nightingale/apps/components/severalnines-system/prometheus-agent
+      ref: main
+      url: https://github.com/martinstrecansky/k8s-external-prometheus
+    kind: git
+  sync:
+    createNamespace: true
+    prunePropagationPolicy: foreground
+    serverSideApply: true
+  targetNamespace: observability
