@@ -1,0 +1,39 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  labels:
+    appbundle.severalnines.com/managed: "true"
+    appbundle.severalnines.com/owner-nn: default.moco-helm
+  name: moco-helm
+  namespace: argocd
+spec:
+  destination:
+    name: ""
+    namespace: default
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    chart: moco
+    helm:
+      values: |
+        monitoring:
+          enabled: true
+          podMonitors:
+            enabled: true
+    repoURL: https://cybozu-go.github.io/moco/
+    targetRevision: 0.26.0
+  syncPolicy:
+    automated:
+      allowEmpty: true
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+    - ServerSideApply=true
+    - PrunePropagationPolicy=foreground
+    - SkipDryRunOnMissingResource=true
+
