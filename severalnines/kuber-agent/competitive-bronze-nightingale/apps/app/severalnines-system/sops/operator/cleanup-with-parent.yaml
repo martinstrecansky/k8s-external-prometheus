@@ -1,0 +1,195 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  annotations:
+    gitops.severalnines.com/cleanup-with-parent: AppBundle/severalnines-system/sops
+    gitops.severalnines.com/parent: AppBundle/severalnines-system/sops
+  name: sops-age-keygen
+  namespace: severalnines-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  annotations:
+    gitops.severalnines.com/cleanup-with-parent: AppBundle/severalnines-system/sops
+    gitops.severalnines.com/parent: AppBundle/severalnines-system/sops
+  name: sops-age-keygen-pubkey
+  namespace: severalnines-system
+rules:
+- apiGroups:
+  - ""
+  resourceNames:
+  - sops-age-pubkey
+  resources:
+  - secrets
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - create
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  annotations:
+    gitops.severalnines.com/cleanup-with-parent: AppBundle/severalnines-system/sops
+    gitops.severalnines.com/parent: AppBundle/severalnines-system/sops
+  name: sops-age-keygen-pubkey
+  namespace: severalnines-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: sops-age-keygen-pubkey
+subjects:
+- kind: ServiceAccount
+  name: sops-age-keygen
+  namespace: severalnines-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  annotations:
+    gitops.severalnines.com/cleanup-with-parent: AppBundle/severalnines-system/sops
+    gitops.severalnines.com/parent: AppBundle/severalnines-system/sops
+  name: sops-age-keygen-privkey
+  namespace: sops-secrets
+rules:
+- apiGroups:
+  - ""
+  resourceNames:
+  - sops-age-key
+  resources:
+  - secrets
+  verbs:
+  - get
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - create
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  annotations:
+    gitops.severalnines.com/cleanup-with-parent: AppBundle/severalnines-system/sops
+    gitops.severalnines.com/parent: AppBundle/severalnines-system/sops
+  name: sops-age-keygen-privkey
+  namespace: sops-secrets
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: sops-age-keygen-privkey
+subjects:
+- kind: ServiceAccount
+  name: sops-age-keygen
+  namespace: severalnines-system
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  annotations:
+    gitops.severalnines.com/cleanup-with-parent: AppBundle/severalnines-system/sops
+    gitops.severalnines.com/parent: AppBundle/severalnines-system/sops
+  labels:
+    severalnines.com/feature: sops
+    severalnines.com/role: keygen
+  name: sops-age-keygen
+  namespace: severalnines-system
+spec:
+  activeDeadlineSeconds: 300
+  backoffLimit: 4
+  completions: 1
+  parallelism: 1
+  template:
+    metadata:
+      labels:
+        severalnines.com/feature: sops
+        severalnines.com/role: keygen
+    spec:
+      containers:
+      - args:
+        - |
+          set -eu
+
+          # Check both secrets independently. The half-state recovery case
+          # (privkey survives, pubkey missing — e.g. agent-namespace wipe
+          # while the SOPS namespace stayed put) needs the pubkey to be
+          # re-derived from the surviving privkey, not "skip everything
+          # because privkey exists." Old code did a single privkey check
+          # → translator then failed loud with "sops-age-pubkey not
+          # found" because pubkey was never recreated (K1).
+          umask 077
+          HAVE_PRIV=0
+          HAVE_PUB=0
+          if kubectl get secret -n "$SOPS_NAMESPACE" sops-age-key >/dev/null 2>&1; then
+            HAVE_PRIV=1
+          fi
+          if kubectl get secret -n "$AGENT_NAMESPACE" sops-age-pubkey >/dev/null 2>&1; then
+            HAVE_PUB=1
+          fi
+
+          if [ "$HAVE_PRIV" = 1 ] && [ "$HAVE_PUB" = 1 ]; then
+            echo "sops-age-key + sops-age-pubkey both present; nothing to do"
+            exit 0
+          fi
+
+          # `age-keygen -y` derives a pubkey from an existing privkey —
+          # used by the half-state branch to avoid rotating the key.
+          # Both branches need the age binary; install once here.
+          apk add --no-cache age >/dev/null
+
+          if [ "$HAVE_PRIV" = 1 ] && [ "$HAVE_PUB" = 0 ]; then
+            echo "privkey present but pubkey missing — deriving pubkey from privkey"
+            kubectl get secret -n "$SOPS_NAMESPACE" sops-age-key \
+              -o jsonpath='{.data.keys\.txt}' | base64 -d > /tmp/keys.txt
+            PUBKEY=$(age-keygen -y /tmp/keys.txt)
+            kubectl create secret generic sops-age-pubkey \
+              --namespace "$AGENT_NAMESPACE" \
+              --from-literal=recipient="$PUBKEY"
+            rm -f /tmp/keys.txt
+            echo "sops-age-pubkey re-derived from existing privkey"
+            exit 0
+          fi
+
+          # Neither (or only pubkey) — full keygen. The "only pubkey
+          # present" sub-case is degenerate (privkey lost → all prior
+          # ciphertext is unreadable anyway); we generate a fresh
+          # keypair and overwrite the orphan pubkey via --dry-run
+          # apply pattern so the operator picks up the new recipient.
+          # RBAC (keygen-rbac.yaml) grants this Job's SA patch/update
+          # on the named pubkey Secret to allow the apply path.
+          age-keygen -o /tmp/keys.txt
+
+          kubectl create secret generic sops-age-key \
+            --namespace "$SOPS_NAMESPACE" \
+            --from-file=keys.txt=/tmp/keys.txt
+
+          PUBKEY=$(grep '^# public key:' /tmp/keys.txt | cut -d' ' -f4)
+          # If an orphan pubkey existed, replace it; otherwise create fresh.
+          kubectl create secret generic sops-age-pubkey \
+            --namespace "$AGENT_NAMESPACE" \
+            --from-literal=recipient="$PUBKEY" \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+          rm -f /tmp/keys.txt
+          echo "sops-age-keygen complete (full keypair generated)"
+        command:
+        - /bin/sh
+        - -c
+        env:
+        - name: AGENT_NAMESPACE
+          value: severalnines-system
+        - name: SOPS_NAMESPACE
+          value: sops-secrets
+        image: alpine/k8s:1.31.5
+        name: keygen
+      restartPolicy: OnFailure
+      serviceAccountName: sops-age-keygen
+

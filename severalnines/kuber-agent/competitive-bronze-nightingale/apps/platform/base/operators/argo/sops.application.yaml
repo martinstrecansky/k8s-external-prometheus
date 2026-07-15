@@ -1,0 +1,37 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  labels:
+    appbundle.severalnines.com/managed: "true"
+    appbundle.severalnines.com/owner-nn: severalnines-system.sops
+  name: sops
+  namespace: argocd
+spec:
+  destination:
+    name: ""
+    namespace: sops-secrets
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    chart: sops-secrets-operator
+    helm:
+      values: |
+        secretsAsFiles:
+          - name: sops-age-key
+            mountPath: /home/nonroot/.config/sops/age
+            secretName: sops-age-key
+    repoURL: https://isindir.github.io/sops-secrets-operator
+    targetRevision: 0.16.0
+  syncPolicy:
+    automated:
+      allowEmpty: false
+      prune: false
+      selfHeal: false
+    syncOptions:
+    - CreateNamespace=true
+    - ServerSideApply=true
+
