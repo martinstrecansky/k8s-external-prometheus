@@ -1,0 +1,124 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  annotations:
+    gitops.severalnines.com/cleanup-with-parent: AppBundle/severalnines-system/prometheus-agent
+    gitops.severalnines.com/parent: AppBundle/severalnines-system/prometheus-agent
+  labels:
+    severalnines.com/feature: prometheus-agent
+  name: prometheus-agent
+  namespace: observability
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  annotations:
+    gitops.severalnines.com/cleanup-with-parent: AppBundle/severalnines-system/prometheus-agent
+    gitops.severalnines.com/parent: AppBundle/severalnines-system/prometheus-agent
+  labels:
+    severalnines.com/feature: prometheus-agent
+  name: prometheus-agent
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - nodes
+  - nodes/metrics
+  - services
+  - endpoints
+  - pods
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - get
+- apiGroups:
+  - networking.k8s.io
+  resources:
+  - ingresses
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - discovery.k8s.io
+  resources:
+  - endpointslices
+  verbs:
+  - get
+  - list
+  - watch
+- nonResourceURLs:
+  - /metrics
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  annotations:
+    gitops.severalnines.com/cleanup-with-parent: AppBundle/severalnines-system/prometheus-agent
+    gitops.severalnines.com/parent: AppBundle/severalnines-system/prometheus-agent
+  labels:
+    severalnines.com/feature: prometheus-agent
+  name: prometheus-agent
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: prometheus-agent
+subjects:
+- kind: ServiceAccount
+  name: prometheus-agent
+  namespace: observability
+---
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: PrometheusAgent
+metadata:
+  annotations:
+    gitops.severalnines.com/cleanup-with-parent: AppBundle/severalnines-system/prometheus-agent
+    gitops.severalnines.com/parent: AppBundle/severalnines-system/prometheus-agent
+  labels:
+    severalnines.com/feature: prometheus-agent
+  name: kuber-cc
+  namespace: observability
+spec:
+  externalLabels:
+    kubernetes_cluster: competitive-bronze-nightingale
+  podMonitorNamespaceSelector: {}
+  podMonitorSelector: {}
+  probeNamespaceSelector: {}
+  probeSelector: {}
+  remoteWrite:
+  - basicAuth:
+      password:
+        key: password
+        name: cmon-prom-auth
+      username:
+        key: username
+        name: cmon-prom-auth
+    name: cc-prom
+    queueConfig:
+      capacity: 10000
+      maxSamplesPerSend: 1000
+      maxShards: 5
+    tlsConfig:
+      insecureSkipVerify: true
+    url: https://143.198.135.53:9090/api/v1/write
+  replicas: 1
+  resources:
+    limits:
+      memory: 400Mi
+    requests:
+      cpu: 50m
+      memory: 200Mi
+  scrapeConfigNamespaceSelector: {}
+  scrapeConfigSelector: {}
+  serviceAccountName: prometheus-agent
+  serviceMonitorNamespaceSelector: {}
+  serviceMonitorSelector: {}
+
