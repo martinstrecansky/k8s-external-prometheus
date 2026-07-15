@@ -1,0 +1,88 @@
+apiVersion: agent.severalnines.com/v1alpha1
+kind: AppBundle
+metadata:
+  labels:
+    severalnines.com/feature: prometheus-stack
+  name: prometheus-stack
+  namespace: severalnines-system
+spec:
+  manageLifecycle: true
+  provider: argo
+  source:
+    helm:
+      chart: kube-prometheus-stack
+      repoURL: https://prometheus-community.github.io/helm-charts
+      values: |
+        crds:
+          enabled: true
+        prometheusOperator:
+          enabled: true
+        defaultRules:
+          create: false
+        alertmanager:
+          enabled: false
+        grafana:
+          enabled: true
+          service:
+            type: ClusterIP
+          sidecar:
+            datasources:
+              enabled: true
+              label: grafana_datasource
+              # The addon intentionally disables the bundled Prometheus server
+              # by default. Without this guard, kube-prometheus-stack
+              # provisions a `prometheus` datasource pointing at a Service that
+              # does not exist.
+              defaultDatasourceEnabled: false
+            # Discovers the ClusterControl dashboard ConfigMaps the addon
+            # ships as auxiliaries (see dashboards.go). folderAnnotation +
+            # foldersFromFilesStructure place each dashboard in the Grafana
+            # folder named by its `grafana_folder` annotation.
+            dashboards:
+              enabled: true
+              label: grafana_dashboard
+              labelValue: "1"
+              folderAnnotation: grafana_folder
+              provider:
+                foldersFromFilesStructure: true
+        prometheus:
+          enabled: false
+          service:
+            type: ClusterIP
+          prometheusSpec:
+            podMonitorSelectorNilUsesHelmValues: false
+            serviceMonitorSelectorNilUsesHelmValues: false
+            ruleSelectorNilUsesHelmValues: false
+            probeSelectorNilUsesHelmValues: false
+            enableRemoteWriteReceiver: true
+            retention: 24h
+        nodeExporter:
+          enabled: false
+        kubeStateMetrics:
+          enabled: false
+        # Kube-* scrape jobs need their target services; disabling all of them
+        # in operator-only mode avoids the chart attempting to wire scrapes to
+        # components that may not exist in every cluster shape.
+        kubeApiServer:
+          enabled: false
+        kubelet:
+          enabled: false
+        kubeControllerManager:
+          enabled: false
+        coreDns:
+          enabled: false
+        kubeDns:
+          enabled: false
+        kubeEtcd:
+          enabled: false
+        kubeScheduler:
+          enabled: false
+        kubeProxy:
+          enabled: false
+      version: 75.6.0
+    kind: helm
+  sync:
+    createNamespace: true
+    prunePropagationPolicy: foreground
+    serverSideApply: true
+  targetNamespace: observability
