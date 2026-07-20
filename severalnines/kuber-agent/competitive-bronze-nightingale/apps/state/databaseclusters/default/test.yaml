@@ -1,0 +1,62 @@
+apiVersion: agent.severalnines.com/v1alpha1
+kind: DatabaseCluster
+metadata:
+  labels:
+    agent.severalnines.com/operator: moco
+    template.dbConfig: small
+    template.resource: small
+  name: test
+  namespace: default
+spec:
+  compute:
+    resources:
+      limits:
+        cpu: "1"
+        memory: 2Gi
+      requests:
+        cpu: "1"
+        memory: 2Gi
+  databaseParams:
+    mycnf:
+      innodb_buffer_pool_size: 1280M
+      innodb_flush_log_at_trx_commit: 1
+      innodb_flush_method: O_DIRECT
+      innodb_io_capacity: 300
+      innodb_log_file_size: 350M
+      log_queries_not_using_indexes: "ON"
+      long_query_time: 1
+      max_connections: 200
+      max_heap_table_size: 64M
+      slow_query_log: "ON"
+      thread_cache_size: 16
+      tmp_table_size: 64M
+  externalAccess:
+    loadBalancer:
+      enabled: false
+      ports:
+      - name: mysql
+        port: 3306
+        protocol: TCP
+        targetPort: 3306
+    nodePort:
+      enabled: true
+      ports:
+      - name: mysql-np
+        port: 3306
+        protocol: TCP
+  manageLifecycle: true
+  monitoring:
+    enabled: true
+    exporter: true
+  size: 1
+  storageSpec:
+    data:
+      template:
+        metadata: {}
+        spec:
+          resources:
+            requests:
+              storage: 20Gi
+          storageClassName: do-block-storage
+  type: moco
+  version: 8.4.4
