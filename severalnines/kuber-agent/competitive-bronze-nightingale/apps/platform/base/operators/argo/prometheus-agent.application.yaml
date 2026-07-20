@@ -17,7 +17,6 @@ spec:
     server: https://kubernetes.default.svc
   project: default
   source:
-    directory: {}
     path: severalnines/kuber-agent/competitive-bronze-nightingale/apps/components/severalnines-system/prometheus-agent
     repoURL: https://github.com/martinstrecansky/k8s-external-prometheus
     targetRevision: main
