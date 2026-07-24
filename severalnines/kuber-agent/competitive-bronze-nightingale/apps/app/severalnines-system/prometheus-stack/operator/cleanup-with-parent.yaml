@@ -3132,6 +3132,35 @@ metadata:
 ---
 apiVersion: v1
 data:
+  datasource.yaml: |
+    apiVersion: 1
+    datasources:
+      - name: ClusterControl
+        type: prometheus
+        access: proxy
+        url: "https://143.198.135.53:9090"
+        basicAuth: true
+        basicAuthUser: $__file{/etc/secrets/cmon-prom-auth/username}
+        secureJsonData:
+          basicAuthPassword: $__file{/etc/secrets/cmon-prom-auth/password}
+        jsonData:
+          tlsSkipVerify: true
+          httpMethod: POST
+        isDefault: true
+        editable: false
+kind: ConfigMap
+metadata:
+  annotations:
+    gitops.severalnines.com/cleanup-with-parent: AppBundle/severalnines-system/prometheus-stack
+    gitops.severalnines.com/parent: AppBundle/severalnines-system/prometheus-stack
+  labels:
+    grafana_datasource: "1"
+    observability.kuber-cc/feature: external-datasource
+  name: kuber-datasource-clustercontrol
+  namespace: observability
+---
+apiVersion: v1
+data:
   keys: admin-user,admin-password
   owner: prometheus-stack
   secretName: prometheus-stack-grafana
