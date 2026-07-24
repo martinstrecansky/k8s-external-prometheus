@@ -1,0 +1,31 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    managed-by: clustercontrol-agent
+  name: s9s-read-extra
+  namespace: default
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: s9s:cluster-read-extra
+subjects:
+- kind: ServiceAccount
+  name: agent-operator-controller-manager
+  namespace: severalnines-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    managed-by: clustercontrol-agent
+  name: s9s-intent-admin
+  namespace: default
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: s9s:intent-admin
+subjects:
+- kind: ServiceAccount
+  name: agent-operator-controller-manager
+  namespace: severalnines-system
