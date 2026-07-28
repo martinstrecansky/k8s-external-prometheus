@@ -8,6 +8,7 @@ metadata:
 spec:
   manageLifecycle: true
   provider: argo
+  prune: true
   source:
     helm:
       chart: kube-prometheus-stack
@@ -23,6 +24,23 @@ spec:
           enabled: false
         grafana:
           enabled: true
+          # Admin credentials come from the addon-delivered Secret created
+          # once by the grafana-admin init Job (see admin_secret.go /
+          # grafana-admin-init.yaml). Without existingSecret the subchart
+          # renders a fresh randAlphaNum password on every `helm template`
+          # (Argo has no cluster `lookup`), keeping the Application
+          # permanently OutOfSync and rotating the password on every sync
+          # (CLUS-7411). The keys match the exposure-registry entry the UI
+          # credentials modal reads (expose.go).
+          admin:
+            existingSecret: prometheus-stack-grafana-admin
+            userKey: admin-user
+            passwordKey: admin-password
+          # Mounts the prometheus-agent remote-write auth Secret into the
+          # Grafana pod when the external-Prometheus datasource ships — the
+          # provisioned datasource (datasource.go) reads the credentials via
+          # Grafana's $__file{} provider. Substituted to [] when inactive.
+          extraSecretMounts: [{"name": "cmon-prom-auth", "secretName": "cmon-prom-auth", "mountPath": "/etc/secrets/cmon-prom-auth", "readOnly": true}]
           service:
             type: NodePort
             nodePort: 32080
