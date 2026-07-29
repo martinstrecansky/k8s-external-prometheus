@@ -1,0 +1,109 @@
+apiVersion: v1
+data:
+  keys: ADMIN_PASSWORD
+  owner: moko-external-prometheus
+  secretName: moco-moko-external-prometheus
+  username: moco-admin
+kind: ConfigMap
+metadata:
+  labels:
+    agent.severalnines.com/expose-registry: "true"
+  name: expose-moco-moko-external-prometheus
+  namespace: default
+---
+apiVersion: v1
+data:
+  innodb_buffer_pool_size: 1280M
+  innodb_flush_log_at_trx_commit: "1"
+  innodb_flush_method: O_DIRECT
+  innodb_io_capacity: "300"
+  innodb_log_file_size: 350M
+  log_queries_not_using_indexes: "ON"
+  long_query_time: "1"
+  max_connections: "200"
+  max_heap_table_size: 64M
+  slow_query_log: "ON"
+  thread_cache_size: "16"
+  tmp_table_size: 64M
+kind: ConfigMap
+metadata:
+  name: moko-external-prometheus-mysql-config
+  namespace: default
+---
+apiVersion: moco.cybozu.com/v1beta2
+kind: MySQLCluster
+metadata:
+  labels:
+    app: moko-external-prometheus
+    managed-by: clustercontrol-agent
+  name: moko-external-prometheus
+  namespace: default
+spec:
+  mysqlConfigMapName: moko-external-prometheus-mysql-config
+  podTemplate:
+    spec:
+      containers:
+      - image: ghcr.io/cybozu-go/moco/mysql:8.4.4
+        name: mysqld
+        resources:
+          limits:
+            cpu: "1"
+            memory: 2Gi
+          requests:
+            cpu: "1"
+            memory: 2Gi
+      - args:
+        - --mysqld.address=localhost:3306
+        - --mysqld.username=moco-exporter
+        env:
+        - name: MYSQLD_EXPORTER_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: EXPORTER_PASSWORD
+              name: moco-moko-external-prometheus
+        image: prom/mysqld-exporter:v0.19.0
+        name: mysqld-exporter
+        ports:
+        - containerPort: 9104
+          name: mysqld-metrics
+          protocol: TCP
+  primaryServiceTemplate:
+    spec:
+      type: ClusterIP
+  replicaServiceTemplate:
+    spec:
+      type: ClusterIP
+  replicas: 1
+  serverIDBase: 1000
+  volumeClaimTemplates:
+  - metadata:
+      name: mysql-data
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 20Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: moko-external-prometheus
+    managed-by: clustercontrol-agent
+  name: moko-external-prometheus-nodeport
+  namespace: default
+spec:
+  ports:
+  - name: mysql-np
+    port: 3306
+    protocol: TCP
+    targetPort: 3306
+  selector:
+    app.kubernetes.io/instance: moko-external-prometheus
+    app.kubernetes.io/name: mysql
+    moco.cybozu.com/role: primary
+  type: NodePort
+status:
+  loadBalancer: {}
+
