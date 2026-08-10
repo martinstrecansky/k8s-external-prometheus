@@ -51,7 +51,7 @@ spec:
             memory: 2Gi
           requests:
             cpu: "1"
-            memory: 2Gi
+            memory: 1Gi
       - args:
         - --mysqld.address=localhost:3306
         - --mysqld.username=moco-exporter

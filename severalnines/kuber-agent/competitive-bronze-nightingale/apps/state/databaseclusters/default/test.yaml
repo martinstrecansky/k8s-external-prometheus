@@ -15,7 +15,7 @@ spec:
         memory: 2Gi
       requests:
         cpu: "1"
-        memory: 2Gi
+        memory: 1Gi
   databaseParams:
     mycnf:
       innodb_buffer_pool_size: 1280M
