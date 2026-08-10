@@ -45,9 +45,6 @@ spec:
         port: 3306
         protocol: TCP
   manageLifecycle: true
-  monitoring:
-    enabled: true
-    exporter: true
   size: 1
   storageSpec:
     data:
